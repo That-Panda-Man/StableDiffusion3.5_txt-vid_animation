@@ -42,34 +42,25 @@ from diffusers import (
 from diffusers.utils import load_image
 from transformers import SiglipVisionModel, SiglipImageProcessor
 
-# ---------------------------------------------------------------------------
 # Configuration
-# ---------------------------------------------------------------------------
 
 @dataclass
 class PipelineConfig:
-    #  Pipeline mode 
-    # "controlnet_sd35" | "controlnet_sd3" | "img2img"
+    #  Pipeline mode (see details in main() below)
     pipeline_mode: str       = "img2img"
 
-    #  Model IDs 
-    # controlnet_sd35: sd3_model="stabilityai/stable-diffusion-3.5-large"
-    #                  controlnet_model="InstantX/SD3.5-Large-Controlnet-Canny"
-    # controlnet_sd3:  sd3_model="stabilityai/stable-diffusion-3-medium-diffusers"
-    #                  controlnet_model="InstantX/SD3-Controlnet-Canny"
-    # img2img:         sd3_model="stabilityai/stable-diffusion-3.5-large"
-    #                  controlnet_model="" (ignored)
+    #  Model IDs  (ControlNet must match base model hidden dim)
     sd3_model_id: str           = "stabilityai/stable-diffusion-3.5-large"
     controlnet_model_id: str    = "stabilityai/stable-diffusion-3.5-large-controlnet-canny"
-    ipadapter_model_id: str     = "InstantX/SD3.5-Large-IP-Adapter"   # set to "InstantX/SD3-IPAdapter" to enable
+    ipadapter_model_id: str     = "InstantX/SD3.5-Large-IP-Adapter"
     image_encoder_id: str       = "google/siglip-so400m-patch14-384"
 
     #  I/O paths 
     input_video_path: str       = "input_video.mp4"
-    input_video_path_global: str = "input_videos"  # for batch processing multiple videos
+    input_video_path_global: str = "input_videos"
     output_frames_dir: str      = "output/frames"
     output_video_path: str      = "output/animation_output.mp4"
-    style_image_path: str       = "style_image.png"                           # leave "" to disable
+    style_image_path: str       = "style_image.png" # leave "" to disable
 
     #  Scheduled prompts (4 keyframes) 
     prompt_start: str           = "a misty forest at dawn, golden light through trees, cinematic, photorealistic, 8k"
@@ -93,17 +84,15 @@ class PipelineConfig:
     output_fps: int             = 24
     canny_low_threshold: int    = 100
     canny_high_threshold: int   = 200
-    dissolve_frames: float      = 6 # how many frames are used to dissolve, for 24fps 6 is 0.25s, 4.8 is 0.2s, 12 is 0.5s, etc.
-    hold_frames: int            = 4 # how many frames to hold the keyframe prompts, for 24fps 4 is ~0.17s, 6 is 0.25s, 12 is 0.5s, etc.
+    dissolve_frames: float      = 6 # how many frames are used to dissolve
+    hold_frames: int            = 4 # how many frames to hold the keyframe prompts
 
     #  Hardware 
     device: str                 = "cuda"   # "cpu" or "mps" for Apple Silicon
     dtype: torch.dtype          = torch.bfloat16
 
 
-# ---------------------------------------------------------------------------
 # 1. Video ControlNet frames  (Canny edge extraction)
-# ---------------------------------------------------------------------------
 
 def extract_canny_frames(
     video_path: str,
@@ -154,9 +143,7 @@ def extract_canny_frames(
     return sorted(saved_paths)
 
 
-# ---------------------------------------------------------------------------
 # 2. Prompt scheduling  (linear interpolation across 4 keyframes)
-# ---------------------------------------------------------------------------
 
 def interpolate_prompts(
     prompt_start: str,
@@ -224,9 +211,7 @@ def get_prompt_weight(
     return prompt_a, 1.0 - alpha, prompt_b, alpha
 
 
-# ---------------------------------------------------------------------------
 # 3. Load models
-# ---------------------------------------------------------------------------
 
 from diffusers.image_processor import VaeImageProcessor
 
@@ -357,9 +342,7 @@ def load_pipeline(config: PipelineConfig) -> PipelineType:
     return pipe
 
 
-# ---------------------------------------------------------------------------
 # 4. Generate a single frame
-# ---------------------------------------------------------------------------
 
 def generate_frame(
     pipe: PipelineType,
@@ -456,9 +439,7 @@ def generate_frame(
     return result.images[0]
 
 
-# ---------------------------------------------------------------------------
 # 5. Frames � video
-# ---------------------------------------------------------------------------
 
 def compile_video(
     config: PipelineConfig,
@@ -590,9 +571,7 @@ def compile_video_dissolve(
     print(f"Video saved: {output_path}")
 
 
-# ---------------------------------------------------------------------------
 # 6. Main pipeline
-# ---------------------------------------------------------------------------
 
 def run_pipeline(config: PipelineConfig) -> None:
 
@@ -672,9 +651,7 @@ def run_pipeline(config: PipelineConfig) -> None:
     print(f"Video:  {config.output_video_path}")
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
 
