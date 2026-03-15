@@ -60,7 +60,7 @@ conda install -c conda-forge \
 ### 4. Log in to Hugging Face
 
 ```bash
-huggingface-cli login
+hf auth login
 ```
 
 Paste your access token when prompted. This is required to download the gated SD3.5 weights automatically on first run.
@@ -118,7 +118,7 @@ config = PipelineConfig(
     sd3_model_id          = "stabilityai/stable-diffusion-3.5-large",
     controlnet_model_id   = "stabilityai/stable-diffusion-3.5-large-controlnet-canny",
 
-    # Output resolution
+    # Output resolution, must be in multiples of 16
     width   = 768,
     height  = 432,
 
